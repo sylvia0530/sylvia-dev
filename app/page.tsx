@@ -183,15 +183,23 @@ function ContactIcon({ name }: { name: "mail" | "phone" | "pin" }) {
   );
 }
 
-/** Formulaire : ouvre l'application de messagerie avec le message déjà rédigé. */
+// Clé publique Web3Forms (gratuite) : les messages arrivent dans ta boîte mail.
+// Mets-la dans le fichier .env.local : NEXT_PUBLIC_WEB3FORMS_KEY=ta_cle
+const WEB3FORMS_KEY = process.env.NEXT_PUBLIC_WEB3FORMS_KEY ?? "";
+
+const initialForm = {
+  name: "",
+  email: "",
+  project: projectTypes[0],
+  message: "",
+};
+
+/** Formulaire : envoie le message directement dans ta boîte mail. */
 function ContactForm() {
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    project: projectTypes[0],
-    message: "",
-  });
-  const [sent, setSent] = useState(false);
+  const [form, setForm] = useState(initialForm);
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">(
+    "idle"
+  );
 
   const update =
     (key: keyof typeof form) =>
@@ -202,20 +210,56 @@ function ContactForm() {
     ) =>
       setForm((current) => ({ ...current, [key]: event.target.value }));
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    const subject = `Nouveau message de ${form.name} - ${form.project}`;
-    const body = `Nom : ${form.name}\nEmail : ${form.email}\nType de projet : ${form.project}\n\n${form.message}`;
-
-    window.location.href = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(
-      subject
-    )}&body=${encodeURIComponent(body)}`;
-
-    setSent(true);
+  // Vide tous les champs et revient au formulaire
+  const resetForm = () => {
+    setForm(initialForm);
+    setStatus("idle");
   };
 
-  if (sent) {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (status === "sending") return;
+
+    if (!WEB3FORMS_KEY) {
+      console.warn("NEXT_PUBLIC_WEB3FORMS_KEY est manquante dans .env.local");
+      setStatus("error");
+      return;
+    }
+
+    setStatus("sending");
+
+    try {
+      const response = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          access_key: WEB3FORMS_KEY,
+          subject: `Nouveau message de ${form.name} - ${form.project}`,
+          from_name: "Portfolio SylviaDev",
+          name: form.name,
+          email: form.email,
+          project: form.project,
+          message: form.message,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setForm(initialForm);
+        setStatus("sent");
+      } else {
+        setStatus("error");
+      }
+    } catch {
+      setStatus("error");
+    }
+  };
+
+  if (status === "sent") {
     return (
       <div className="flex min-h-[420px] flex-col items-center justify-center rounded-[2rem] bg-[#FBF1E4] p-8 text-center text-[#201B16] shadow-[0_25px_60px_rgba(60,25,5,0.25)]">
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#C1662E] text-3xl text-white">
@@ -223,17 +267,17 @@ function ContactForm() {
         </div>
 
         <h3 className="mt-6 font-[family-name:var(--font-display)] text-2xl font-bold">
-          Message prêt à partir
+          Message envoyé
         </h3>
 
         <p className="mt-3 max-w-xs text-sm leading-6 text-[#5C5042]">
-          Votre application de messagerie s&apos;est ouverte avec le message
-          rédigé. Il ne reste qu&apos;à l&apos;envoyer.
+          Merci ! Votre message est bien arrivé. Je vous répondrai dès que
+          possible.
         </p>
 
         <button
           type="button"
-          onClick={() => setSent(false)}
+          onClick={resetForm}
           className="mt-6 rounded-full border border-[#201B16] px-6 py-2.5 text-xs font-semibold transition hover:bg-[#201B16] hover:text-white"
         >
           Écrire un autre message
@@ -328,12 +372,25 @@ function ContactForm() {
         />
       </div>
 
+      {status === "error" && (
+        <p
+          role="alert"
+          className="mt-5 rounded-2xl bg-[#FBE3DA] px-4 py-3 text-sm leading-6 text-[#8A2E14]"
+        >
+          Le message n&apos;a pas pu être envoyé. Réessayez, ou écrivez-moi
+          directement à {CONTACT_EMAIL}.
+        </p>
+      )}
+
       <button
         type="submit"
-        className="group mt-6 inline-flex w-full items-center justify-center gap-3 rounded-full bg-[#201B16] px-7 py-3.5 text-sm font-semibold text-white transition duration-300 hover:-translate-y-0.5 hover:bg-[#C1662E]"
+        disabled={status === "sending"}
+        className="group mt-6 inline-flex w-full items-center justify-center gap-3 rounded-full bg-[#201B16] px-7 py-3.5 text-sm font-semibold text-white transition duration-300 hover:-translate-y-0.5 hover:bg-[#C1662E] disabled:cursor-wait disabled:opacity-70 disabled:hover:translate-y-0"
       >
-        Envoyer le message
-        <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
+        {status === "sending" ? "Envoi en cours…" : "Envoyer le message"}
+        {status !== "sending" && (
+          <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
+        )}
       </button>
     </form>
   );
