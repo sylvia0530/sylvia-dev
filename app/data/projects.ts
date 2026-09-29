@@ -23,9 +23,9 @@ export const projects: Project[] = [
       "Tailwind CSS",
     ],
     type: "Projet académique",
-    image: "/projects/cua.png",
-    github: "#",
+    image: "/cua.png",
   },
+
   {
     id: 2,
     title: "MyBiz Manager",
@@ -40,22 +40,5 @@ export const projects: Project[] = [
     ],
     type: "Projet personnel",
     image: "/projects/mybiz.png",
-    github: "#",
-  },
-  {
-    id: 3,
-    title: "Application Web Angular & Laravel",
-    description:
-      "Développement d’une application web avec une interface Angular et une API backend développée avec Laravel.",
-    technologies: [
-      "Angular",
-      "Laravel",
-      "JavaScript",
-      "HTML",
-      "CSS",
-    ],
-    type: "Projet académique",
-    image: "/projects/angular-laravel.png",
-    github: "#",
   },
 ];

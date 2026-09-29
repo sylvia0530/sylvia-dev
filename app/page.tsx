@@ -41,6 +41,304 @@ const skills = [
   },
 ];
 
+/** Technologies qui tournent en orbite dans le hero. */
+const orbitTech = ["React", "Next.js", "NestJS", "Laravel", "Angular", "Tailwind"];
+const ORBIT_DURATION = 18; // secondes (doit rester identique dans le CSS)
+
+/** Phrases qui s'écrivent puis s'effacent dans le cercle. */
+const typedWords = [
+  "Bonjour, je suis Sylvia",
+  "Développeuse Web",
+  "Applications sur mesure",
+  "Full-stack",
+  "Next.js & NestJS",
+  "Prête à créer",
+];
+
+/** Effet machine à écrire : écrit un mot, le garde, l'efface, puis passe au suivant. */
+function TypingText({ words }: { words: string[] }) {
+  const [index, setIndex] = useState(0);
+  const [text, setText] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const [reduced, setReduced] = useState(false);
+
+  // Respecte « réduire les animations » : on affiche juste le premier mot
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setReduced(true);
+      setText(words[0]);
+    }
+  }, [words]);
+
+  useEffect(() => {
+    if (reduced) return;
+
+    const word = words[index];
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+
+    if (!deleting && text === word) {
+      timeout = setTimeout(() => setDeleting(true), 1600);
+    } else if (deleting && text === "") {
+      setDeleting(false);
+      setIndex((current) => (current + 1) % words.length);
+    } else {
+      timeout = setTimeout(
+        () =>
+          setText(
+            deleting
+              ? word.slice(0, text.length - 1)
+              : word.slice(0, text.length + 1)
+          ),
+        deleting ? 40 : 90
+      );
+    }
+
+    return () => {
+      if (timeout) clearTimeout(timeout);
+    };
+  }, [text, deleting, index, words, reduced]);
+
+  return (
+    <p className="mt-2 flex min-h-[3.5rem] items-center justify-center font-mono text-base font-semibold leading-snug sm:min-h-[4.5rem] sm:text-lg">
+      <span>
+        {text}
+        <span className="caret ml-0.5 inline-block h-[1em] w-0.5 bg-white align-middle" />
+      </span>
+    </p>
+  );
+}
+
+/* ---------- Contact ---------- */
+const CONTACT_EMAIL = "vololonandrasanasylvia@gmail.com";
+
+const contactInfo = [
+  {
+    icon: "mail",
+    label: "Email",
+    value: CONTACT_EMAIL,
+    href: `mailto:${CONTACT_EMAIL}`,
+  },
+  {
+    icon: "phone",
+    label: "Téléphone",
+    value: "038 16 004 33",
+    href: "tel:+261381600433",
+  },
+  {
+    icon: "pin",
+    label: "Localisation",
+    value: "Antananarivo, Madagascar",
+    href: undefined,
+  },
+] as const;
+
+// À remplacer par tes vrais liens (ajoute ton pseudo à la fin)
+const socials = [
+  { label: "GitHub", href: "https://github.com/" },
+  { label: "LinkedIn", href: "https://www.linkedin.com/" },
+];
+
+const projectTypes = [
+  "Site web",
+  "Application web",
+  "Application de gestion",
+  "Autre",
+];
+
+const fieldClass =
+  "w-full rounded-2xl border border-[#E4D2AC] bg-white/70 px-4 py-3 text-sm text-[#201B16] placeholder:text-[#9A8A76] outline-none transition focus:border-[#C1662E] focus:bg-white focus:ring-4 focus:ring-[#C1662E]/15";
+
+function ContactIcon({ name }: { name: "mail" | "phone" | "pin" }) {
+  const icons = {
+    mail: (
+      <>
+        <rect x="3" y="5" width="18" height="14" rx="2" />
+        <path d="m3 7 9 6 9-6" />
+      </>
+    ),
+    phone: (
+      <path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z" />
+    ),
+    pin: (
+      <>
+        <path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z" />
+        <circle cx="12" cy="10" r="2.5" />
+      </>
+    ),
+  };
+
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-5 w-5"
+      aria-hidden="true"
+    >
+      {icons[name]}
+    </svg>
+  );
+}
+
+/** Formulaire : ouvre l'application de messagerie avec le message déjà rédigé. */
+function ContactForm() {
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    project: projectTypes[0],
+    message: "",
+  });
+  const [sent, setSent] = useState(false);
+
+  const update =
+    (key: keyof typeof form) =>
+    (
+      event: React.ChangeEvent<
+        HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+      >
+    ) =>
+      setForm((current) => ({ ...current, [key]: event.target.value }));
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const subject = `Nouveau message de ${form.name} - ${form.project}`;
+    const body = `Nom : ${form.name}\nEmail : ${form.email}\nType de projet : ${form.project}\n\n${form.message}`;
+
+    window.location.href = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(
+      subject
+    )}&body=${encodeURIComponent(body)}`;
+
+    setSent(true);
+  };
+
+  if (sent) {
+    return (
+      <div className="flex min-h-[420px] flex-col items-center justify-center rounded-[2rem] bg-[#FBF1E4] p-8 text-center text-[#201B16] shadow-[0_25px_60px_rgba(60,25,5,0.25)]">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#C1662E] text-3xl text-white">
+          ✓
+        </div>
+
+        <h3 className="mt-6 font-[family-name:var(--font-display)] text-2xl font-bold">
+          Message prêt à partir
+        </h3>
+
+        <p className="mt-3 max-w-xs text-sm leading-6 text-[#5C5042]">
+          Votre application de messagerie s&apos;est ouverte avec le message
+          rédigé. Il ne reste qu&apos;à l&apos;envoyer.
+        </p>
+
+        <button
+          type="button"
+          onClick={() => setSent(false)}
+          className="mt-6 rounded-full border border-[#201B16] px-6 py-2.5 text-xs font-semibold transition hover:bg-[#201B16] hover:text-white"
+        >
+          Écrire un autre message
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      className="rounded-[2rem] bg-[#FBF1E4] p-6 text-[#201B16] shadow-[0_25px_60px_rgba(60,25,5,0.25)] sm:p-8"
+    >
+      <h3 className="font-[family-name:var(--font-display)] text-2xl font-bold">
+        Envoyez-moi un message
+      </h3>
+
+      <p className="mt-1 text-sm text-[#6B5B4A]">
+        Décrivez votre idée en quelques lignes.
+      </p>
+
+      <div className="mt-6 grid gap-4 sm:grid-cols-2">
+        <div>
+          <label htmlFor="contact-name" className="mb-1.5 block text-xs font-semibold text-[#4A4136]">
+            Nom complet
+          </label>
+          <input
+            id="contact-name"
+            type="text"
+            required
+            autoComplete="name"
+            placeholder="Votre nom"
+            value={form.name}
+            onChange={update("name")}
+            className={fieldClass}
+          />
+        </div>
+
+        <div>
+          <label htmlFor="contact-email" className="mb-1.5 block text-xs font-semibold text-[#4A4136]">
+            Email
+          </label>
+          <input
+            id="contact-email"
+            type="email"
+            required
+            autoComplete="email"
+            placeholder="nom@exemple.com"
+            value={form.email}
+            onChange={update("email")}
+            className={fieldClass}
+          />
+        </div>
+      </div>
+
+      <div className="mt-4">
+        <label htmlFor="contact-project" className="mb-1.5 block text-xs font-semibold text-[#4A4136]">
+          Type de projet
+        </label>
+        <select
+          id="contact-project"
+          value={form.project}
+          onChange={update("project")}
+          className={fieldClass}
+        >
+          {projectTypes.map((type) => (
+            <option key={type} value={type}>
+              {type}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="mt-4">
+        <div className="mb-1.5 flex items-center justify-between">
+          <label htmlFor="contact-message" className="text-xs font-semibold text-[#4A4136]">
+            Message
+          </label>
+          <span className="text-[11px] text-[#9A8A76]">
+            {form.message.length}/500
+          </span>
+        </div>
+        <textarea
+          id="contact-message"
+          required
+          rows={5}
+          maxLength={500}
+          placeholder="Bonjour Sylvia, j'aimerais créer..."
+          value={form.message}
+          onChange={update("message")}
+          className={`${fieldClass} resize-none`}
+        />
+      </div>
+
+      <button
+        type="submit"
+        className="group mt-6 inline-flex w-full items-center justify-center gap-3 rounded-full bg-[#201B16] px-7 py-3.5 text-sm font-semibold text-white transition duration-300 hover:-translate-y-0.5 hover:bg-[#C1662E]"
+      >
+        Envoyer le message
+        <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
+      </button>
+    </form>
+  );
+}
+
 function Sparkle({ className = "", delay = 0 }: { className?: string; delay?: number }) {
   return (
     <svg
@@ -141,6 +439,7 @@ export default function Home() {
       className={`${displayFont.variable} ${bodyFont.variable} min-h-screen overflow-hidden bg-[#FBF1E4] font-[family-name:var(--font-body)] text-[#201B16]`}
     >
       <style>{`
+        /* ---------- Apparition au scroll ---------- */
         .reveal {
           opacity: 0;
           transform: translateY(28px);
@@ -172,12 +471,111 @@ export default function Home() {
           box-shadow: 0 20px 40px -20px rgba(120, 72, 24, 0.28);
           border-color: #C1662E;
         }
+
+        /* ---------- Visuel animé du hero ---------- */
+
+        /* Badges en orbite : ils tournent mais restent droits */
+        .orbit-item {
+          --r: 135px;
+          animation: orbit ${ORBIT_DURATION}s linear infinite;
+          transform: translate(-50%, -50%) rotate(var(--a, 0deg)) translateX(var(--r)) rotate(calc(var(--a, 0deg) * -1));
+        }
+        @keyframes orbit {
+          from { transform: translate(-50%, -50%) rotate(0deg) translateX(var(--r)) rotate(0deg); }
+          to   { transform: translate(-50%, -50%) rotate(360deg) translateX(var(--r)) rotate(-360deg); }
+        }
+        @media (min-width: 640px) {
+          .orbit-item { --r: 170px; }
+        }
+
+        /* Anneau en pointillés */
+        .spin-slow { animation: spinSlow 30s linear infinite; }
+        @keyframes spinSlow { to { transform: rotate(360deg); } }
+
+        /* Ondes qui partent du centre */
+        .pulse-ring { animation: pulseRing 2.4s ease-out infinite; }
+        @keyframes pulseRing {
+          0%   { transform: scale(1);   opacity: 0.8; }
+          100% { transform: scale(1.65); opacity: 0; }
+        }
+
+        /* Cercle central qui respire */
+        .core-glow { animation: coreGlow 2.4s ease-in-out infinite; }
+        @keyframes coreGlow {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(193, 102, 46, 0.5), 0 15px 35px rgba(193, 102, 46, 0.35); transform: scale(1); }
+          50%      { box-shadow: 0 0 0 18px rgba(193, 102, 46, 0), 0 15px 35px rgba(193, 102, 46, 0.35); transform: scale(1.06); }
+        }
+
+        /* Cercle : bordure lumineuse qui tourne + ligne de scan */
+        .core-ring {
+          background: conic-gradient(
+            from 0deg,
+            #C1662E,
+            #F4C27A,
+            #FBF1E4,
+            #F4C27A,
+            #C1662E,
+            #7A3514,
+            #C1662E
+          );
+          animation: spinSlow 6s linear infinite;
+        }
+        .core-scan {
+          background: linear-gradient(to bottom, transparent, rgba(244, 194, 122, 0.22), transparent);
+          animation: scan 4s linear infinite;
+        }
+        @keyframes scan {
+          from { transform: translateY(-100%); }
+          to   { transform: translateY(260%); }
+        }
+
+        /* Quadrillage à l'intérieur du cercle */
+        .core-grid {
+          background-image:
+            linear-gradient(rgba(251, 241, 228, 0.2) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(251, 241, 228, 0.2) 1px, transparent 1px);
+          background-size: 22px 22px;
+          animation: coreGridMove 10s linear infinite;
+        }
+        @keyframes coreGridMove {
+          to { background-position: 22px 22px, 22px 22px; }
+        }
+
+        /* Curseur qui clignote */
+        .caret { animation: blink 1s steps(1) infinite; }
+        @keyframes blink {
+          50% { opacity: 0; }
+        }
+
+        /* ---------- Fond du hero : vagues ---------- */
+        /* Vagues : le SVG fait 200 % de large et glisse de 50 % */
+        .wave { animation: waveMove 18s linear infinite; }
+        .wave-2 { animation-duration: 12s; animation-direction: reverse; }
+        .wave-3 { animation-duration: 8s; }
+        @keyframes waveMove {
+          from { transform: translateX(0); }
+          to   { transform: translateX(-50%); }
+        }
+
+        /* Symboles de code : grands, brillants, ils montent, tournent et grossissent */
+        .drift { animation: drift 6s ease-in-out infinite; }
+        .drift-rev { animation: drift 8s ease-in-out infinite reverse; }
+        @keyframes drift {
+          0%, 100% { transform: translateY(0) rotate(-8deg) scale(1); opacity: 0.7; }
+          50%      { transform: translateY(-38px) rotate(14deg) scale(1.2); opacity: 1; }
+        }
+
+        /* ---------- Accessibilité : moins d'animation ---------- */
         @media (prefers-reduced-motion: reduce) {
           .reveal, .hero-in, .twinkle, .card-lift {
             animation: none !important;
             transition: none !important;
             opacity: 1 !important;
             transform: none !important;
+          }
+          .orbit-item, .spin-slow, .pulse-ring, .core-glow, .core-ring, .core-scan,
+          .caret, .core-grid, .wave, .drift, .drift-rev {
+            animation: none !important;
           }
         }
       `}</style>
@@ -258,6 +656,59 @@ export default function Home() {
         className="relative mx-auto max-w-6xl px-4 pb-16 pt-6 sm:px-8 lg:px-8 lg:pt-10"
       >
         <div className="relative min-h-[650px] overflow-hidden rounded-[2.5rem] border border-[#DCC49F] bg-[#F8EDDD] shadow-[0_25px_70px_rgba(87,55,28,0.10)] sm:min-h-[680px] sm:rounded-[3rem]">
+          {/* ================= FOND ================= */}
+          <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+            {/* base crème */}
+            <div className="absolute inset-0 bg-gradient-to-b from-[#FBF1E4] to-[#F6E4CB]" />
+
+            {/* symboles de code bien visibles */}
+            {[
+              { s: "{ }", cls: "left-[4%] top-[9%] text-6xl text-[#C1662E]/80 [text-shadow:0_6px_18px_rgba(193,102,46,0.45)]", d: "0s", rev: false },
+              { s: "</>", cls: "left-[40%] top-[6%] text-4xl text-[#201B16]/60", d: "-2s", rev: true },
+              { s: "( )", cls: "left-[3%] bottom-[30%] text-5xl text-[#201B16]/55", d: "-4s", rev: false },
+              { s: ";", cls: "right-[5%] top-[38%] text-7xl text-[#C1662E]/80 [text-shadow:0_6px_18px_rgba(193,102,46,0.45)]", d: "-1s", rev: true },
+              { s: "[ ]", cls: "right-[8%] bottom-[24%] text-5xl text-[#C1662E]/80 [text-shadow:0_6px_18px_rgba(193,102,46,0.45)]", d: "-3s", rev: false },
+              { s: "=>", cls: "left-[42%] bottom-[16%] text-4xl text-[#201B16]/55", d: "-5s", rev: true },
+            ].map((item) => (
+              <span
+                key={item.s}
+                className={`${item.rev ? "drift-rev" : "drift"} absolute font-mono font-bold ${item.cls}`}
+                style={{ animationDelay: item.d }}
+              >
+                {item.s}
+              </span>
+            ))}
+
+            {/* vagues en bas */}
+            <svg
+              className="wave wave-1 absolute bottom-0 left-0 h-36 w-[200%]"
+              viewBox="0 0 1200 120"
+              preserveAspectRatio="none"
+              fill="#F2C9A0"
+              fillOpacity="0.5"
+            >
+              <path d="M0 60 C150 20 150 100 300 60 S450 100 600 60 C750 20 750 100 900 60 S1050 100 1200 60 V120 H0 Z" />
+            </svg>
+            <svg
+              className="wave wave-2 absolute bottom-0 left-0 h-28 w-[200%]"
+              viewBox="0 0 1200 120"
+              preserveAspectRatio="none"
+              fill="#E8A26B"
+              fillOpacity="0.35"
+            >
+              <path d="M0 60 C150 20 150 100 300 60 S450 100 600 60 C750 20 750 100 900 60 S1050 100 1200 60 V120 H0 Z" />
+            </svg>
+            <svg
+              className="wave wave-3 absolute bottom-0 left-0 h-20 w-[200%]"
+              viewBox="0 0 1200 120"
+              preserveAspectRatio="none"
+              fill="#C1662E"
+              fillOpacity="0.2"
+            >
+              <path d="M0 60 C150 20 150 100 300 60 S450 100 600 60 C750 20 750 100 900 60 S1050 100 1200 60 V120 H0 Z" />
+            </svg>
+          </div>
+
           {/* ================= DECORATIONS ================= */}
 
           <Sparkle className="absolute right-[7%] top-[8%] h-7 w-7 text-[#201B16]" delay={0} />
@@ -291,37 +742,64 @@ export default function Home() {
           {/* ================= CONTENT ================= */}
 
           <div className="relative z-10 grid min-h-[650px] items-center gap-10 px-6 py-12 sm:px-12 sm:py-16 lg:grid-cols-[0.95fr_1.05fr] lg:px-16">
-            {/* ================= PHOTO ================= */}
+            {/* ================= VISUEL ANIMÉ ================= */}
 
-            <div className="hero-in relative mx-auto flex w-full max-w-[390px] justify-center lg:justify-start" style={{ animationDelay: "0ms" }}>
-              <div className="absolute left-1/2 top-1/2 h-[360px] w-[300px] -translate-x-1/2 -translate-y-1/2 rounded-[50%] border border-[#C1662E]/20 sm:h-[450px] sm:w-[370px]" />
+            <div
+              className="hero-in relative mx-auto flex h-[340px] w-[340px] items-center justify-center sm:h-[420px] sm:w-[420px]"
+              style={{ animationDelay: "0ms" }}
+              aria-hidden="true"
+            >
+              {/* anneaux */}
+              <div className="spin-slow absolute inset-4 rounded-full border-2 border-dashed border-[#C1662E]/40 sm:inset-2" />
 
-              <div className="absolute left-1/2 top-1/2 h-[335px] w-[275px] -translate-x-1/2 -translate-y-1/2 rounded-[50%] border border-[#C1662E]/35 sm:h-[425px] sm:w-[345px]" />
+              {/* ondes qui pulsent */}
+              <div className="pulse-ring absolute h-44 w-44 rounded-full border-2 border-[#C1662E] sm:h-56 sm:w-56" />
+              <div
+                className="pulse-ring absolute h-44 w-44 rounded-full border-2 border-[#C1662E] sm:h-56 sm:w-56"
+                style={{ animationDelay: "1.2s" }}
+              />
 
-              <div className="relative z-10 w-[250px] sm:w-[300px]">
-                <div className="rounded-[50%] border border-[#C1662E]/50 bg-[#FBF1E4] p-3 shadow-[0_20px_45px_rgba(84,53,27,0.14)] transition-transform duration-500 hover:scale-[1.02]">
-                  <div className="rounded-[50%] border border-[#C1662E]/30 bg-[#F4E6CF] p-2">
-                    <Image
-                      src="/sary.jpg"
-                      alt="Sylvia - Développeuse Web"
-                      width={500}
-                      height={650}
-                      priority
-                      className="aspect-[4/5] w-full rounded-[50%] object-cover"
-                    />
+              {/* cercle central avec le texte animé */}
+              <div className="core-glow relative z-10 h-44 w-44 rounded-full sm:h-56 sm:w-56">
+                {/* bordure lumineuse qui tourne */}
+                <div className="core-ring absolute inset-0 rounded-full" />
+
+                {/* intérieur brun chocolat avec quadrillage */}
+                <div
+                  className="absolute inset-[4px] overflow-hidden rounded-full"
+                  style={{
+                    background:
+                      "radial-gradient(circle at 30% 25%, #8A5A3C 0%, #5A3A28 55%, #3A2418 100%)",
+                  }}
+                >
+                  <div className="core-grid absolute inset-0" />
+                  <div className="core-scan absolute inset-x-0 top-0 h-2/5" />
+                  <div className="absolute -bottom-8 left-1/2 h-24 w-40 -translate-x-1/2 rounded-full bg-[#C1662E]/50 blur-2xl" />
+
+                  <div className="relative flex h-full w-full flex-col items-center justify-center px-6 text-center text-[#FBF1E4]">
+                    <span className="font-mono text-xs text-[#F4C27A] sm:text-sm">
+                      &lt;/&gt;
+                    </span>
+                    <TypingText words={typedWords} />
                   </div>
                 </div>
-
-                <Sparkle className="absolute -right-8 top-[48%] h-7 w-7 text-[#C1662E]" delay={200} />
-
-                <div className="absolute -left-7 top-[30%] h-3 w-3 rounded-full border border-[#C1662E] bg-[#F8EDDD]" />
               </div>
 
-              <div className="absolute bottom-[3%] right-[6%] z-20 flex h-[72px] w-[72px] rotate-[-8deg] items-center justify-center rounded-full border-[7px] border-[#F8EDDD] bg-[#C1662E] text-white shadow-lg transition-transform duration-300 hover:rotate-0 sm:right-[2%]">
-                <span className="font-mono text-xl font-bold">
-                  &lt;/&gt;
+              {/* badges en orbite */}
+              {orbitTech.map((tech, i) => (
+                <span
+                  key={tech}
+                  className="orbit-item absolute left-1/2 top-1/2 z-20 whitespace-nowrap rounded-full border border-[#C1662E]/50 bg-[#FBF1E4] px-3 py-1.5 text-[11px] font-semibold text-[#201B16] shadow-md sm:text-xs"
+                  style={
+                    {
+                      animationDelay: `${-(i * ORBIT_DURATION) / orbitTech.length}s`,
+                      "--a": `${(360 / orbitTech.length) * i}deg`,
+                    } as React.CSSProperties
+                  }
+                >
+                  {tech}
                 </span>
-              </div>
+              ))}
             </div>
 
             {/* ================= TEXT ================= */}
@@ -665,32 +1143,95 @@ export default function Home() {
         id="contact"
         className="mx-auto max-w-6xl px-6 pb-20 sm:px-10 lg:px-8"
       >
-        <Reveal className="relative overflow-hidden rounded-[2.8rem] bg-[#C1662E] px-8 py-14 text-white sm:px-14 sm:py-16">
+        <Reveal className="relative overflow-hidden rounded-[2.8rem] bg-[#C1662E] px-6 py-12 text-white sm:px-12 sm:py-16">
           <Sparkle className="absolute right-10 top-8 h-6 w-6 text-white/50" delay={100} />
+          <Sparkle className="absolute bottom-10 left-[46%] hidden h-4 w-4 text-white/40 lg:block" delay={600} />
 
-          <LeafDecoration className="absolute bottom-[-35px] right-8 h-44 w-28 rotate-12 text-white/20" />
+          <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-white/10" />
+          <LeafDecoration className="pointer-events-none absolute -bottom-8 left-6 h-44 w-28 -rotate-12 text-white/15" />
 
-          <div className="relative max-w-2xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-white/70">
-              Collaborons
-            </p>
+          <div className="relative grid gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-14">
+            {/* ---------- Infos ---------- */}
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-white/70">
+                Collaborons
+              </p>
 
-            <h2 className="mt-3 font-[family-name:var(--font-display)] text-4xl font-bold sm:text-5xl">
-              Vous avez un projet ?
-            </h2>
+              <h2 className="mt-3 font-[family-name:var(--font-display)] text-4xl font-bold sm:text-5xl">
+                Vous avez un projet ?
+              </h2>
 
-            <p className="mt-5 max-w-xl leading-7 text-white/85">
-              Parlons de votre idée et voyons ensemble comment la
-              transformer en une application web.
-            </p>
+              <p className="mt-5 max-w-md leading-7 text-white/85">
+                Parlons de votre idée et voyons ensemble comment la
+                transformer en une application web.
+              </p>
 
-            <a
-              href="mailto:vololonandrasanasylvia@gmail.com"
-              className="mt-8 inline-flex items-center gap-3 rounded-full bg-[#FBF1E4] px-7 py-3.5 text-sm font-semibold text-[#201B16] transition-all duration-300 hover:-translate-y-0.5 hover:bg-white"
-            >
-              Me contacter
-              <span>→</span>
-            </a>
+              <div className="mt-6 inline-flex items-center gap-2.5 rounded-full border border-white/25 bg-white/10 px-4 py-2 text-xs font-semibold">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#8FE3A0] opacity-75 motion-reduce:animate-none" />
+                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[#8FE3A0]" />
+                </span>
+                Disponible pour de nouveaux projets
+              </div>
+
+              <ul className="mt-8 space-y-3">
+                {contactInfo.map((item) => {
+                  const content = (
+                    <>
+                      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#FBF1E4] text-[#C1662E]">
+                        <ContactIcon name={item.icon} />
+                      </span>
+
+                      <span className="min-w-0">
+                        <span className="block text-[11px] font-semibold uppercase tracking-[0.2em] text-white/65">
+                          {item.label}
+                        </span>
+                        <span className="block break-words text-sm font-semibold sm:text-base">
+                          {item.value}
+                        </span>
+                      </span>
+                    </>
+                  );
+
+                  const cardClass =
+                    "flex items-center gap-4 rounded-2xl border border-white/20 bg-white/10 p-4 transition duration-300";
+
+                  return (
+                    <li key={item.label}>
+                      {item.href ? (
+                        <a
+                          href={item.href}
+                          className={`${cardClass} hover:-translate-y-0.5 hover:bg-white/20`}
+                        >
+                          {content}
+                        </a>
+                      ) : (
+                        <div className={cardClass}>{content}</div>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+
+              <div className="mt-6 flex flex-wrap items-center gap-3">
+                <span className="text-xs font-semibold text-white/70">Me suivre</span>
+
+                {socials.map((social) => (
+                  <a
+                    key={social.label}
+                    href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded-full border border-white/40 px-4 py-2 text-xs font-semibold transition duration-300 hover:-translate-y-0.5 hover:bg-[#FBF1E4] hover:text-[#201B16]"
+                  >
+                    {social.label}
+                  </a>
+                ))}
+              </div>
+            </div>
+
+            {/* ---------- Formulaire ---------- */}
+            <ContactForm />
           </div>
         </Reveal>
       </section>
