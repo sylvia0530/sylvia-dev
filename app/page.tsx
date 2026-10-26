@@ -220,8 +220,12 @@ function ContactForm() {
     event.preventDefault();
     if (status === "sending") return;
 
-    if (!WEB3FORMS_KEY) {
-      console.warn("NEXT_PUBLIC_WEB3FORMS_KEY est manquante dans .env.local");
+    const accessKey = WEB3FORMS_KEY.trim();
+
+    if (!accessKey) {
+      console.error(
+        "Web3Forms : NEXT_PUBLIC_WEB3FORMS_KEY est absente de .env.local."
+      );
       setStatus("error");
       return;
     }
@@ -229,32 +233,44 @@ function ContactForm() {
     setStatus("sending");
 
     try {
+      const payload = {
+        access_key: accessKey,
+        subject: `Nouveau message de ${form.name} - ${form.project}`,
+        from_name: "Portfolio SylviaDev",
+        name: form.name.trim(),
+        email: form.email.trim(),
+        project: form.project,
+        message: form.message.trim(),
+        replyto: form.email.trim(),
+      };
+
       const response = await fetch("https://api.web3forms.com/submit", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
         },
-        body: JSON.stringify({
-          access_key: WEB3FORMS_KEY,
-          subject: `Nouveau message de ${form.name} - ${form.project}`,
-          from_name: "Portfolio SylviaDev",
-          name: form.name,
-          email: form.email,
-          project: form.project,
-          message: form.message,
-        }),
+        body: JSON.stringify(payload),
       });
 
-      const data = await response.json();
+      const data = await response.json().catch(() => null);
 
-      if (data.success) {
-        setForm(initialForm);
-        setStatus("sent");
-      } else {
+      console.log("Web3Forms response:", data);
+
+      if (!response.ok || !data?.success) {
+        console.error("Web3Forms error:", {
+          status: response.status,
+          message: data?.message ?? data?.body?.message ?? "Erreur inconnue",
+          response: data,
+        });
         setStatus("error");
+        return;
       }
-    } catch {
+
+      setForm(initialForm);
+      setStatus("sent");
+    } catch (error) {
+      console.error("Web3Forms network error:", error);
       setStatus("error");
     }
   };
@@ -377,8 +393,9 @@ function ContactForm() {
           role="alert"
           className="mt-5 rounded-2xl bg-[#FBE3DA] px-4 py-3 text-sm leading-6 text-[#8A2E14]"
         >
-          Le message n&apos;a pas pu être envoyé. Réessayez, ou écrivez-moi
-          directement à {CONTACT_EMAIL}.
+          Le message n&apos;a pas pu être envoyé. Vérifiez les informations
+          saisies puis réessayez. Vous pouvez aussi m&apos;écrire directement à{" "}
+          {CONTACT_EMAIL}.
         </p>
       )}
 
