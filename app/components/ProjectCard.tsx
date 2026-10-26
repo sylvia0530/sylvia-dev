@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import type { Project } from "../data/projects";
 
 interface ProjectCardProps {
@@ -46,16 +47,12 @@ export default function ProjectCard({ project }: ProjectCardProps) {
 
         {/* Boutons */}
         <div className="mt-6 flex flex-wrap gap-3">
-          {project.demo && (
-            <a
-              href={project.demo}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="rounded-full bg-[#C1662E] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#A95124]"
-            >
-              Voir le projet
-            </a>
-          )}
+          <Link
+            href={`/projets/${project.id}`}
+            className="rounded-full bg-[#C1662E] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#A95124]"
+          >
+            Voir le projet
+          </Link>
 
           {project.github && project.github !== "#" && (
             <a

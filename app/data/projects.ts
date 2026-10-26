@@ -5,6 +5,7 @@ export interface Project {
   technologies: string[];
   type: string;
   image: string;
+  features: string[];
   github?: string;
   demo?: string;
 }
@@ -20,12 +21,18 @@ export const projects: Project[] = [
       "NestJS",
       "PostgreSQL",
       "Prisma",
-      "Tailwind CSS",
+      "CSS",
     ],
     type: "Projet académique",
-    image: "/cua.png",
+    image: "/cua.JPG",
+    features: [
+      "Présentation des services de la commune",
+      "Gestion et publication des contenus",
+      "Affichage des actualités et des projets",
+      "Interface bilingue français et malgache",
+    ],
+    demo: "https://site.cua.mg",
   },
-
   {
     id: 2,
     title: "MyBiz Manager",
@@ -39,6 +46,12 @@ export const projects: Project[] = [
       "Tailwind CSS",
     ],
     type: "Projet personnel",
-    image: "/projects/mybiz.png",
+    image: "/mybiz.JPG",
+    features: [
+      "Gestion des produits",
+      "Suivi des ventes",
+      "Organisation des opérations quotidiennes",
+      "Centralisation des informations de gestion",
+    ],
   },
 ];
